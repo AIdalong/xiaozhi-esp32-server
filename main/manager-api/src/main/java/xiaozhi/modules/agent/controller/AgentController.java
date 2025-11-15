@@ -34,12 +34,7 @@ import xiaozhi.common.redis.RedisUtils;
 import xiaozhi.common.user.UserDetail;
 import xiaozhi.common.utils.Result;
 import xiaozhi.common.utils.ResultUtils;
-import xiaozhi.modules.agent.dto.AgentChatHistoryDTO;
-import xiaozhi.modules.agent.dto.AgentChatSessionDTO;
-import xiaozhi.modules.agent.dto.AgentCreateDTO;
-import xiaozhi.modules.agent.dto.AgentDTO;
-import xiaozhi.modules.agent.dto.AgentMemoryDTO;
-import xiaozhi.modules.agent.dto.AgentUpdateDTO;
+import xiaozhi.modules.agent.dto.*;
 import xiaozhi.modules.agent.entity.AgentEntity;
 import xiaozhi.modules.agent.entity.AgentTemplateEntity;
 import xiaozhi.modules.agent.service.AgentChatAudioService;
@@ -104,6 +99,8 @@ public class AgentController {
         return new Result<String>().ok(agentId);
     }
 
+
+
     @PutMapping("/saveMemory/{macAddress}")
     @Operation(summary = "根据设备id更新智能体")
     public Result<Void> updateByDeviceId(@PathVariable String macAddress, @RequestBody @Valid AgentMemoryDTO dto) {
@@ -123,6 +120,14 @@ public class AgentController {
     public Result<Void> update(@PathVariable String id, @RequestBody @Valid AgentUpdateDTO dto) {
         agentService.updateAgentById(id, dto);
         return new Result<>();
+    }
+
+    @PostMapping("/configure")
+    @Operation(summary = "配置角色")
+    @RequiresPermissions("sys:role:normal")
+    public Result<AgentRoleUpdateResponseDTO> update(@RequestBody @Valid AgentRoleUpdateDTO dto) {
+        AgentRoleUpdateResponseDTO agentRoleUpdateResponseDTO = agentService.updateAgentRoleById(dto.getAgent_id(), dto);
+        return new Result<AgentRoleUpdateResponseDTO>().ok(agentRoleUpdateResponseDTO);
     }
 
     @DeleteMapping("/{id}")

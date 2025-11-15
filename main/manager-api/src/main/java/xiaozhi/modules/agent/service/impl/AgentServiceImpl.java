@@ -1,11 +1,6 @@
 package xiaozhi.modules.agent.service.impl;
 
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -29,9 +24,7 @@ import xiaozhi.common.user.UserDetail;
 import xiaozhi.common.utils.ConvertUtils;
 import xiaozhi.common.utils.JsonUtils;
 import xiaozhi.modules.agent.dao.AgentDao;
-import xiaozhi.modules.agent.dto.AgentCreateDTO;
-import xiaozhi.modules.agent.dto.AgentDTO;
-import xiaozhi.modules.agent.dto.AgentUpdateDTO;
+import xiaozhi.modules.agent.dto.*;
 import xiaozhi.modules.agent.entity.AgentEntity;
 import xiaozhi.modules.agent.entity.AgentPluginMapping;
 import xiaozhi.modules.agent.entity.AgentTemplateEntity;
@@ -40,6 +33,9 @@ import xiaozhi.modules.agent.service.AgentPluginMappingService;
 import xiaozhi.modules.agent.service.AgentService;
 import xiaozhi.modules.agent.service.AgentTemplateService;
 import xiaozhi.modules.agent.vo.AgentInfoVO;
+import xiaozhi.modules.device.dao.DeviceDao;
+import xiaozhi.modules.device.dto.DeviceManualAddDTO;
+import xiaozhi.modules.device.entity.DeviceEntity;
 import xiaozhi.modules.device.service.DeviceService;
 import xiaozhi.modules.model.dto.ModelProviderDTO;
 import xiaozhi.modules.model.dto.VoiceDTO;
@@ -49,11 +45,13 @@ import xiaozhi.modules.model.service.ModelProviderService;
 import xiaozhi.modules.security.user.SecurityUser;
 import xiaozhi.modules.sys.enums.SuperAdminEnum;
 import xiaozhi.modules.timbre.service.TimbreService;
+import xiaozhi.modules.timbre.vo.TimbreDetailsVO;
 
 @Service
 @AllArgsConstructor
 public class AgentServiceImpl extends BaseServiceImpl<AgentDao, AgentEntity> implements AgentService {
     private final AgentDao agentDao;
+    private final DeviceDao deviceDao;
     private final TimbreService timbreModelService;
     private final ModelConfigService modelConfigService;
     private final RedisUtils redisUtils;
@@ -359,6 +357,147 @@ public class AgentServiceImpl extends BaseServiceImpl<AgentDao, AgentEntity> imp
         return !"Intent_function_call".equals(intentModelId);
     }
 
+    public static boolean isValidMac(String mac) {
+        if (mac == null || mac.length() != 17) {
+            return false;
+        }
+        // 正则：忽略大小写，6 组 [0-9A-F]{2}，分隔符为 “-” 或 “:”
+        return mac.matches("(?i)^([0-9A-F]{2}[:]){5}[0-9A-F]{2}$");
+    }
+
+    public static boolean isInWhiteList(String appVersion){
+        ArrayList<String> names = new ArrayList<>(Arrays.asList(
+                "LUKKA"
+        ));
+        if(names.contains(appVersion))
+            return true;
+        else
+            return false;
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public AgentCreateByDeviceResponseDTO createAgentByDevice(AgentCreateByDeviceDTO dto){
+
+        // 判断设备型号是否为空
+        if(dto.getDevice_model() == null || dto.getDevice_model().length() == 0){
+            throw new RenException(ErrorCode.DEVICE_EMPTY);
+        }
+        // 判断固件版本不能为空
+        if(dto.getFirmware_version() == null || dto.getFirmware_version().length() == 0){
+            throw new RenException(ErrorCode.FIRMWARE_VERSION_EMPTY);
+        }
+
+        // 判断MAC地址格式
+        if(!isValidMac(dto.getMac_address())){
+            throw new RenException(ErrorCode.MAC_ADDRESS_FORMAT_ERROR);
+        }
+
+        // 判断是否有重复的MAC地址
+        AgentEntity agent = getDefaultAgentByMacAddress(dto.getMac_address().toUpperCase());
+
+        if(agent != null){
+            throw new RenException(ErrorCode.DEVICE_DUPLICATE);
+        }
+
+        // 判断是否在白名单中
+        if(!isInWhiteList(dto.getDevice_model())){
+            throw new RenException(ErrorCode.DEVICE_NOT_IN_WHITELIST);
+        }
+
+
+        // 设备是否注册
+        // 设备注册了，部分信息不正确
+        DeviceEntity deviceEntity = deviceService.getDeviceByMacAddress(dto.getMac_address().toUpperCase());
+
+        if(deviceEntity == null){
+            throw new RenException(ErrorCode.DEVICE_NOT_IN_SYSTEM);
+        }
+
+        if(!deviceEntity.getBoard().equals(dto.getDevice_model()) || !deviceEntity.getAppVersion().equals(dto.getFirmware_version())){
+            throw new RenException(ErrorCode.DEVICE_INFORMATION_ERROR);
+        }
+
+
+        AgentCreateDTO agentCreateDTO = new AgentCreateDTO();
+        agentCreateDTO.setAgentName(dto.getMac_address().toUpperCase());
+        String agentId = createAgent(agentCreateDTO);
+
+        UserDetail user = SecurityUser.getUser();
+
+        Date currentTime = new Date();
+        deviceEntity.setAgentId(agentId);
+        deviceEntity.setUserId(user.getId());
+        deviceEntity.setCreator(user.getId());
+        deviceEntity.setAutoUpdate(1);
+        deviceEntity.setUpdater(user.getId());
+        deviceEntity.setUpdateDate(currentTime);
+        deviceEntity.setLastConnectedAt(currentTime);
+
+        deviceDao.updateById(deviceEntity);
+
+
+
+        AgentCreateByDeviceResponseDTO deviceResponseDTO = new AgentCreateByDeviceResponseDTO();
+        deviceResponseDTO.setAgent_id(agentId);
+        deviceResponseDTO.setAgent_name(dto.getMac_address());
+        deviceResponseDTO.setDevice_id(dto.getMac_address());
+        deviceResponseDTO.setCreate_time(new java.text.SimpleDateFormat("yyyy-MM-dd").format(new java.util.Date()));
+
+        // 添加：清除智能体设备数量缓存
+        redisUtils.delete(RedisKeys.getAgentDeviceCountById(agentId));
+
+        return deviceResponseDTO;
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public AgentRoleUpdateResponseDTO updateAgentRoleById(String agentId, AgentRoleUpdateDTO dto){
+        TimbreDetailsVO timbreDetailsVO = timbreModelService.get(dto.getVoice_type());
+        // AgentId没有写
+        if(dto.getAgent_id()== null || dto.getAgent_id().length() == 0){
+            throw new RenException(ErrorCode.AGENT_ID_EMPTY);
+        }
+        AgentInfoVO agentInfoVO=  getAgentById(dto.getAgent_id());
+        // Agent不存在
+        if(agentInfoVO == null){
+            throw new RenException(ErrorCode.AGENT_NOT_EXIST);
+        }
+        // 不存在对应的音色
+        if(timbreDetailsVO == null){
+            throw new RenException(ErrorCode.VOICE_ERROR);
+        }
+        // 名字长度是否正确
+        if(!(dto.getName().codePointCount(0,dto.getName().length())>=2 && dto.getName().codePointCount(0,dto.getName().length())<=5)){
+            throw new RenException(ErrorCode.NAME_LENGTH_ERROR);
+        }
+        // role_prompt 是否正确
+        if(dto.getRole_prompt() == null || dto.getRole_prompt().length() == 0){
+            throw new RenException(ErrorCode.ROLE_PROMPT_EMPTY);
+        }
+        AgentUpdateDTO new_dto = new AgentUpdateDTO();
+
+        new_dto.setAsrModelId("ASR_FunASR");
+        new_dto.setIntentModelId("Intent_intent_llm");
+        new_dto.setVadModelId("VAD_SileroVAD");
+        new_dto.setLlmModelId("LLM_DoubaoLLM");
+        new_dto.setVllmModelId("VLLM_ChatGLMVLLM");
+        new_dto.setMemModelId("Memory_mem_local_short");
+        new_dto.setAgentName(dto.getName());
+        new_dto.setTtsVoiceId(dto.getVoice_type());
+        new_dto.setTtsModelId(timbreDetailsVO.getTtsModelId());
+        new_dto.setSystemPrompt(dto.getRole_prompt());
+
+        updateAgentById(dto.getAgent_id(),new_dto);
+
+        AgentRoleUpdateResponseDTO agentRoleUpdateResponseDTO = new AgentRoleUpdateResponseDTO();
+        agentRoleUpdateResponseDTO.setAgent_id(dto.getAgent_id());
+        agentRoleUpdateResponseDTO.setVoice_url(timbreDetailsVO.getVoiceDemo());
+        agentRoleUpdateResponseDTO.setConfigure_time(new Date().toString());
+
+        return agentRoleUpdateResponseDTO;
+
+    }
     @Override
     @Transactional(rollbackFor = Exception.class)
     public String createAgent(AgentCreateDTO dto) {

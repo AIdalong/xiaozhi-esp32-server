@@ -273,9 +273,11 @@ export default {
     handleSubmit: function(form) {
       console.log('handleSubmit called with form:', form);
       if (form.id) {
+        // 编辑 - 使用dataset_id作为路径参数，form作为请求体
         console.log('Editing knowledge base:', form.datasetId);
         Api.knowledgeBase.updateKnowledgeBase(form.datasetId, form, (res) => {
           console.log('Update response:', res);
+          // 修复：检查 res.data.code 而不是 res.code
           if (res.data && res.data.code === 0) {
             this.dialogVisible = false;
             this.fetchKnowledgeBaseList();
@@ -283,15 +285,8 @@ export default {
           } else {
             this.$message.error(res.data?.msg || this.$t('knowledgeBaseManagement.updateFailed'));
           }
-        }, (err) => {
-          console.log('Error callback received:', err);
-          // 错误回调处理后端返回的错误信息
-          if (err && err.data) {
-            console.log('后端返回错误消息:', err.data.msg || err.msg);
-            this.$message.error(err.data.msg || err.msg || this.$t('knowledgeBaseManagement.updateFailed'));
-          } else {
-            this.$message.error(this.$t('knowledgeBaseManagement.updateFailed'));
-          }
+        }, () => {
+          this.$message.error(this.$t('knowledgeBaseManagement.updateFailed'));
         });
       } else {
         // 新增 - 只传递必要的字段，不传递id
@@ -308,8 +303,6 @@ export default {
             this.dialogVisible = false;
             this.fetchKnowledgeBaseList();
             this.$message.success(this.$t('knowledgeBaseManagement.addSuccess'));
-          } else {
-            this.$message.error(res.data?.msg || this.$t('knowledgeBaseManagement.addFailed'));
           }
         }, (err) => {
           console.log('Error callback received:', err);
@@ -345,15 +338,8 @@ export default {
           } else {
             this.$message.error(res.data?.msg || this.$t('knowledgeBaseManagement.deleteFailed'));
           }
-        }, (err) => {
-          console.log('Error callback received:', err);
-          // 错误回调处理后端返回的错误信息
-          if (err && err.data) {
-            console.log('后端返回错误消息:', err.data.msg || err.msg);
-            this.$message.error(err.data.msg || err.msg || this.$t('knowledgeBaseManagement.deleteFailed'));
-          } else {
-            this.$message.error(this.$t('knowledgeBaseManagement.deleteFailed'));
-          }
+        }, () => {
+          this.$message.error(this.$t('knowledgeBaseManagement.deleteFailed'));
         });
       }).catch(() => {
         this.$message({
@@ -379,15 +365,8 @@ export default {
           } else {
             this.$message.error(res.data?.msg || this.$t('knowledgeBaseManagement.deleteFailed'));
           }
-        }, (err) => {
-          console.log('Error callback received:', err);
-          // 错误回调处理后端返回的错误信息
-          if (err && err.data) {
-            console.log('后端返回错误消息:', err.data.msg || err.msg);
-            this.$message.error(err.data.msg || err.msg || this.$t('knowledgeBaseManagement.deleteFailed'));
-          } else {
-            this.$message.error(this.$t('knowledgeBaseManagement.deleteFailed'));
-          }
+        }, () => {
+          this.$message.error(this.$t('knowledgeBaseManagement.deleteFailed'));
         });
       }).catch(() => {
         this.$message({

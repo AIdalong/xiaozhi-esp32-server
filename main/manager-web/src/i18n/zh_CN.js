@@ -1183,7 +1183,7 @@ export default {
   'knowledgeBaseDialog.descriptionLengthLimit': '知识库描述不能超过200个字符',
 
   // 知识库管理页面新增查看按钮文本
-  'knowledgeBaseManagement.view': '管理文件',
+  'knowledgeBaseManagement.view': '查看',
 
   // 上传文件页面文本
   'knowledgeFileUpload.back': '返回',
@@ -1215,7 +1215,7 @@ export default {
   'knowledgeFileUpload.statusProcessing': '处理中',
   'knowledgeFileUpload.statusCancelled': '已取消',
   'knowledgeFileUpload.statusCompleted': '已完成',
-  'knowledgeFileUpload.statusFailed': '失败',
+  'knowledgeFileUpload.statusFailed': '解析失败',
   'knowledgeFileUpload.uploadSuccess': '文档上传成功',
   'knowledgeFileUpload.uploadFailed': '文档上传失败',
   'knowledgeFileUpload.parseSuccess': '文档解析成功',
@@ -1259,5 +1259,4 @@ export default {
   'knowledgeFileUpload.comprehensiveSimilarity': '综合相似度',
   'knowledgeFileUpload.content': '内容:',
   'knowledgeFileUpload.testQuestionRequired': '请输入测试问题',
-  'knowledgeBaseDialog.descriptionRequired': '请输入知识库描述',
 }

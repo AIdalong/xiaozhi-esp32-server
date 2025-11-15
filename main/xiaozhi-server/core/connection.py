@@ -446,7 +446,7 @@ class ConnectionHandler:
         )
         if enhanced_prompt:
             self.change_system_prompt(enhanced_prompt)
-            self.logger.bind(tag=TAG).debug("系统提示词已增强更新")
+            self.logger.bind(tag=TAG).info("系统提示词已增强更新")
 
     def _init_report_threads(self):
         """初始化ASR和TTS上报线程"""

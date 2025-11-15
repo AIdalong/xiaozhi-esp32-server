@@ -54,6 +54,7 @@ public class TimbreServiceImpl extends BaseServiceImpl<TimbreDao, TimbreEntity> 
         Map<String, Object> params = new HashMap<String, Object>();
         params.put(Constant.PAGE, dto.getPage());
         params.put(Constant.LIMIT, dto.getLimit());
+        System.out.println(dto.getLanguage());
         IPage<TimbreEntity> page = baseDao.selectPage(
                 getPage(params, null, true),
                 // 定义查询条件
@@ -61,7 +62,8 @@ public class TimbreServiceImpl extends BaseServiceImpl<TimbreDao, TimbreEntity> 
                         // 必须按照ttsID查找
                         .eq("tts_model_id", dto.getTtsModelId())
                         // 如果有音色名字，按照音色名模糊查找
-                        .like(StringUtils.isNotBlank(dto.getName()), "name", dto.getName()));
+                        .like(StringUtils.isNotBlank(dto.getName()), "name", dto.getName())
+                        .like(StringUtils.isNotBlank(dto.getLanguage()), "languages", dto.getLanguage()));
 
         return getPageData(page, TimbreDetailsVO.class);
     }

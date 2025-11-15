@@ -401,13 +401,7 @@ export default {
         },
         (err) => {
           this.loading = false;
-          console.log('Error callback received:', err);
-          if (err && err.data) {
-            console.log('后端返回错误消息:', err.data.msg || err.msg);
-            this.$message.error(err.data.msg || err.msg || this.$t('knowledgeFileUpload.getListFailed'));
-          } else {
-            this.$message.error(this.$t('knowledgeFileUpload.getListFailed'));
-          }
+          this.$message.error(this.$t('knowledgeFileUpload.getListFailed'));
           console.error('获取文档列表失败:', err);
           this.fileList = [];
           this.total = 0;
@@ -663,12 +657,7 @@ export default {
               }
             },
             (err) => {
-              // 错误回调处理后端返回的错误信息
-              if (err && err.data) {
-                reject({ success: false, fileName: file.name, error: err.data.msg || err.msg || this.$t('knowledgeFileUpload.uploadFailed') });
-              } else {
-                reject({ success: false, fileName: file.name, error: this.$t('knowledgeFileUpload.uploadFailed') });
-              }
+              reject({ success: false, fileName: file.name, error: this.$t('knowledgeFileUpload.uploadFailed') });
               console.error('上传文档失败:', err);
             }
           );
@@ -729,12 +718,7 @@ export default {
         },
         (err) => {
           this.uploading = false;
-          // 错误回调处理后端返回的错误信息
-          if (err && err.data) {
-            this.$message.error(err.data.msg || err.msg || this.$t('knowledgeFileUpload.uploadFailed'));
-          } else {
-            this.$message.error(this.$t('knowledgeFileUpload.uploadFailed'));
-          }
+          this.$message.error(this.$t('knowledgeFileUpload.uploadFailed'));
           console.error('上传文档失败:', err);
         }
       );
@@ -767,12 +751,7 @@ export default {
             }
           },
           (err) => {
-            // 错误回调处理后端返回的错误信息
-            if (err && err.data) {
-              this.$message.error(err.data.msg || err.msg || this.$t('knowledgeFileUpload.parseFailed'));
-            } else {
-              this.$message.error(this.$t('knowledgeFileUpload.parseFailed'));
-            }
+            this.$message.error(this.$t('knowledgeFileUpload.parseFailed'));
             console.error('解析文档失败:', err);
           }
         );
@@ -805,12 +784,7 @@ export default {
             }
           },
           (err) => {
-            // 错误回调处理后端返回的错误信息
-            if (err && err.data) {
-              this.$message.error(err.data.msg || err.msg || this.$t('knowledgeFileUpload.deleteFailed'));
-            } else {
-              this.$message.error(this.$t('knowledgeFileUpload.deleteFailed'));
-            }
+            this.$message.error(this.$t('knowledgeFileUpload.deleteFailed'));
             console.error('删除文档失败:', err);
           }
         );
@@ -855,12 +829,7 @@ export default {
                 }
               },
               (err) => {
-                // 错误回调处理后端返回的错误信息
-                if (err && err.data) {
-                  reject(err.data.msg || err.msg || this.$t('knowledgeFileUpload.deleteFailed'));
-                } else {
-                  reject(this.$t('knowledgeFileUpload.deleteFailed'));
-                }
+                reject(this.$t('knowledgeFileUpload.deleteFailed'));
                 console.error('删除文档失败:', err);
               }
             );
@@ -969,12 +938,7 @@ export default {
         },
         (err) => {
           this.sliceLoading = false;
-          // 错误回调处理后端返回的错误信息
-          if (err && err.data) {
-            this.$message.error(err.data.msg || err.msg || '获取切片列表失败');
-          } else {
-            this.$message.error('获取切片列表失败');
-          }
+          this.$message.error('获取切片列表失败');
           console.error('获取切片列表失败:', err);
           this.sliceList = [];
           this.sliceTotal = 0;
@@ -1091,12 +1055,7 @@ export default {
         },
         (err) => {
           this.retrievalTestLoading = false;
-          // 错误回调处理后端返回的错误信息
-          if (err && err.data) {
-            this.$message.error(err.data.msg || err.msg || '召回测试失败');
-          } else {
-            this.$message.error('召回测试失败');
-          }
+          this.$message.error('召回测试失败');
           console.error('召回测试失败:', err);
         }
       );

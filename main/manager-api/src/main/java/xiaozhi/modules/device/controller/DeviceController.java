@@ -28,6 +28,9 @@ import xiaozhi.common.redis.RedisKeys;
 import xiaozhi.common.redis.RedisUtils;
 import xiaozhi.common.user.UserDetail;
 import xiaozhi.common.utils.Result;
+import xiaozhi.modules.agent.dto.AgentCreateByDeviceDTO;
+import xiaozhi.modules.agent.dto.AgentCreateByDeviceResponseDTO;
+import xiaozhi.modules.agent.service.AgentService;
 import xiaozhi.modules.device.dto.DeviceManualAddDTO;
 import xiaozhi.modules.device.dto.DeviceRegisterDTO;
 import xiaozhi.modules.device.dto.DeviceUnBindDTO;
@@ -42,14 +45,16 @@ import xiaozhi.modules.sys.service.SysParamsService;
 @RequestMapping("/device")
 public class DeviceController {
     private final DeviceService deviceService;
+    private final AgentService agentService;
     private final RedisUtils redisUtils;
     private final SysParamsService sysParamsService;
     private final RestTemplate restTemplate;
     private final ObjectMapper objectMapper;
 
-    public DeviceController(DeviceService deviceService, RedisUtils redisUtils, SysParamsService sysParamsService,
+    public DeviceController(DeviceService deviceService, AgentService agentService,RedisUtils redisUtils, SysParamsService sysParamsService,
             RestTemplate restTemplate, ObjectMapper objectMapper) {
         this.deviceService = deviceService;
+        this.agentService = agentService;
         this.redisUtils = redisUtils;
         this.sysParamsService = sysParamsService;
         this.restTemplate = restTemplate;
@@ -207,5 +212,22 @@ public class DeviceController {
         UserDetail user = SecurityUser.getUser();
         deviceService.manualAddDevice(user.getId(), dto);
         return new Result<>();
+    }
+
+    @PostMapping("/test-add")
+    @Operation(summary = "用于测试设备添加")
+    @RequiresPermissions("sys:role:normal")
+    public Result<Void> testAddDevice(@RequestBody @Valid AgentCreateByDeviceDTO dto) {
+        UserDetail user = SecurityUser.getUser();
+        deviceService.testAddDevice(user.getId(),dto);
+        return new Result<>();
+    }
+
+    @PostMapping("/add")
+    @Operation(summary = "设备添加")
+    @RequiresPermissions("sys:role:normal")
+    public Result<AgentCreateByDeviceResponseDTO> addDevice(@RequestBody @Valid AgentCreateByDeviceDTO dto) {
+        AgentCreateByDeviceResponseDTO result = agentService.createAgentByDevice(dto);
+        return new Result<AgentCreateByDeviceResponseDTO>().ok(result);
     }
 }

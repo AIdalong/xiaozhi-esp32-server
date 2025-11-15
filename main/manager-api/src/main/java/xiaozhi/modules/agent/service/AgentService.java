@@ -5,11 +5,10 @@ import java.util.Map;
 
 import xiaozhi.common.page.PageData;
 import xiaozhi.common.service.BaseService;
-import xiaozhi.modules.agent.dto.AgentCreateDTO;
-import xiaozhi.modules.agent.dto.AgentDTO;
-import xiaozhi.modules.agent.dto.AgentUpdateDTO;
+import xiaozhi.modules.agent.dto.*;
 import xiaozhi.modules.agent.entity.AgentEntity;
 import xiaozhi.modules.agent.vo.AgentInfoVO;
+import xiaozhi.modules.device.dto.DeviceManualAddDTO;
 
 /**
  * 智能体表处理service
@@ -91,6 +90,7 @@ public interface AgentService extends BaseService<AgentEntity> {
      */
     void updateAgentById(String agentId, AgentUpdateDTO dto);
 
+    AgentRoleUpdateResponseDTO updateAgentRoleById(String agentId, AgentRoleUpdateDTO dto);
     /**
      * 创建智能体
      *
@@ -98,4 +98,7 @@ public interface AgentService extends BaseService<AgentEntity> {
      * @return 创建的智能体ID
      */
     String createAgent(AgentCreateDTO dto);
+
+
+    AgentCreateByDeviceResponseDTO createAgentByDevice(AgentCreateByDeviceDTO dto);
 }

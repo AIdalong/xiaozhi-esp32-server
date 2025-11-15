@@ -1,30 +1,27 @@
-#--------- 本项目推荐环境是python3.10，以下暂时不推荐升级的依赖
-torch==2.2.2
-torchaudio==2.2.2
-numpy==1.26.4
-#--------- cozepy0.20.0要求websockets<15.0.0，以下暂时不推荐升级的依赖
-websockets==14.2
-#--------- 以下是可升级的依赖
 pyyml==0.0.2
-silero_vad==6.1.0
-opuslib_next==1.1.5
+torch==2.2.2
+silero_vad==6.0.0
+websockets==14.2
+opuslib_next==1.1.2
+numpy==1.26.4
 pydub==0.25.1
-funasr==1.2.7
-openai==2.7.1
+funasr==1.2.3
+torchaudio==2.2.2
+openai==2.6.1
 google-generativeai==0.8.5
 edge_tts==7.2.3
-httpx==0.28.1
-aiohttp==3.13.2
-aiohttp_cors==0.8.1
-ormsgpack==1.12.0
+httpx==0.27.2
+aiohttp==3.12.15
+aiohttp_cors==0.7.0
+ormsgpack==1.11.0
 ruamel.yaml==0.18.16
 loguru==0.7.3
 requests==2.32.5
-cozepy==0.20.0
+cozepy==0.19.0
 mem0ai==1.0.0
 bs4==0.0.2
 modelscope==1.23.2
-sherpa_onnx==1.12.15
+sherpa_onnx==1.12.11
 mcp==1.20.0
 cnlunar==0.2.0
 PySocks==1.7.1

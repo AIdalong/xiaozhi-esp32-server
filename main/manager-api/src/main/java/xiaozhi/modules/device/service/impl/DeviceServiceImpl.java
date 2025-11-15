@@ -38,6 +38,7 @@ import xiaozhi.common.service.impl.BaseServiceImpl;
 import xiaozhi.common.user.UserDetail;
 import xiaozhi.common.utils.ConvertUtils;
 import xiaozhi.common.utils.DateUtils;
+import xiaozhi.modules.agent.dto.AgentCreateByDeviceDTO;
 import xiaozhi.modules.device.dao.DeviceDao;
 import xiaozhi.modules.device.dto.DeviceManualAddDTO;
 import xiaozhi.modules.device.dto.DevicePageUserDTO;
@@ -140,6 +141,8 @@ public class DeviceServiceImpl extends BaseServiceImpl<DeviceDao, DeviceEntity> 
 
         return true;
     }
+
+
 
     @Override
     public DeviceReportRespDTO checkDeviceActive(String macAddress, String clientId,
@@ -451,6 +454,18 @@ public class DeviceServiceImpl extends BaseServiceImpl<DeviceDao, DeviceEntity> 
     }
 
     @Override
+    public Boolean isDuplicateDevice(String mac){
+        // 检查mac是否已存在
+        QueryWrapper<DeviceEntity> wrapper = new QueryWrapper<>();
+        wrapper.eq("mac_address", mac);
+        DeviceEntity exist = baseDao.selectOne(wrapper);
+        if (exist != null)
+            return Boolean.TRUE;
+        else
+            return Boolean.FALSE;
+    }
+
+    @Override
     public void manualAddDevice(Long userId, DeviceManualAddDTO dto) {
         // 检查mac是否已存在
         QueryWrapper<DeviceEntity> wrapper = new QueryWrapper<>();
@@ -477,6 +492,33 @@ public class DeviceServiceImpl extends BaseServiceImpl<DeviceDao, DeviceEntity> 
 
         // 添加：清除智能体设备数量缓存
         redisUtils.delete(RedisKeys.getAgentDeviceCountById(dto.getAgentId()));
+    }
+
+
+    @Override
+    public void testAddDevice(Long userId, AgentCreateByDeviceDTO dto) {
+        // 检查mac是否已存在
+        QueryWrapper<DeviceEntity> wrapper = new QueryWrapper<>();
+        wrapper.eq("mac_address", dto.getMac_address());
+        DeviceEntity exist = baseDao.selectOne(wrapper);
+        if (exist != null) {
+            throw new RenException(ErrorCode.MAC_ADDRESS_ALREADY_EXISTS);
+        }
+        Date now = new Date();
+        DeviceEntity entity = new DeviceEntity();
+        entity.setId(dto.getMac_address().toUpperCase());
+        entity.setUserId(-1L);
+        entity.setAgentId("");
+        entity.setBoard(dto.getDevice_model());
+        entity.setAppVersion(dto.getFirmware_version());
+        entity.setMacAddress(dto.getMac_address().toUpperCase());
+        entity.setCreateDate(now);
+        entity.setUpdateDate(now);
+        entity.setLastConnectedAt(now);
+        entity.setCreator(userId);
+        entity.setUpdater(userId);
+        entity.setAutoUpdate(1);
+        baseDao.insert(entity);
     }
 
     /**

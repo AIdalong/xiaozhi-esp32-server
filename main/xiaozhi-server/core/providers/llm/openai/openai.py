@@ -21,22 +21,22 @@ class LLMProvider(LLMProviderBase):
         self.timeout = int(timeout) if timeout else 300
 
         param_defaults = {
-            "max_tokens": int,
-            "temperature": lambda x: round(float(x), 1),
-            "top_p": lambda x: round(float(x), 1),
-            "frequency_penalty": lambda x: round(float(x), 1),
+            "max_tokens": (500, int),
+            "temperature": (0.7, lambda x: round(float(x), 1)),
+            "top_p": (1.0, lambda x: round(float(x), 1)),
+            "frequency_penalty": (0, lambda x: round(float(x), 1)),
         }
 
-        for param, converter in param_defaults.items():
+        for param, (default, converter) in param_defaults.items():
             value = config.get(param)
             try:
                 setattr(
                     self,
                     param,
-                    converter(value) if value not in (None, "") else None,
+                    converter(value) if value not in (None, "") else default,
                 )
             except (ValueError, TypeError):
-                setattr(self, param, None)
+                setattr(self, param, default)
 
         logger.debug(
             f"意图识别参数初始化: {self.temperature}, {self.max_tokens}, {self.top_p}, {self.frequency_penalty}"
@@ -59,25 +59,17 @@ class LLMProvider(LLMProviderBase):
         try:
             dialogue = self.normalize_dialogue(dialogue)
 
-            request_params = {
-                "model": self.model_name,
-                "messages": dialogue,
-                "stream": True,
-            }
-
-            # 添加可选参数,只有当参数不为None时才添加
-            optional_params = {
-                "max_tokens": kwargs.get("max_tokens", self.max_tokens),
-                "temperature": kwargs.get("temperature", self.temperature),
-                "top_p": kwargs.get("top_p", self.top_p),
-                "frequency_penalty": kwargs.get("frequency_penalty", self.frequency_penalty),
-            }
-
-            for key, value in optional_params.items():
-                if value is not None:
-                    request_params[key] = value
-
-            responses = self.client.chat.completions.create(**request_params)
+            responses = self.client.chat.completions.create(
+                model=self.model_name,
+                messages=dialogue,
+                stream=True,
+                max_tokens=kwargs.get("max_tokens", self.max_tokens),
+                temperature=kwargs.get("temperature", self.temperature),
+                top_p=kwargs.get("top_p", self.top_p),
+                frequency_penalty=kwargs.get(
+                    "frequency_penalty", self.frequency_penalty
+                ),
+            )
 
             is_active = True
             for chunk in responses:
@@ -99,29 +91,13 @@ class LLMProvider(LLMProviderBase):
         except Exception as e:
             logger.bind(tag=TAG).error(f"Error in response generation: {e}")
 
-    def response_with_functions(self, session_id, dialogue, functions=None, **kwargs):
+    def response_with_functions(self, session_id, dialogue, functions=None):
         try:
             dialogue = self.normalize_dialogue(dialogue)
 
-            request_params = {
-                "model": self.model_name,
-                "messages": dialogue,
-                "stream": True,
-                "tools": functions,
-            }
-
-            optional_params = {
-                "max_tokens": kwargs.get("max_tokens", self.max_tokens),
-                "temperature": kwargs.get("temperature", self.temperature),
-                "top_p": kwargs.get("top_p", self.top_p),
-                "frequency_penalty": kwargs.get("frequency_penalty", self.frequency_penalty),
-            }
-
-            for key, value in optional_params.items():
-                if value is not None:
-                    request_params[key] = value
-
-            stream = self.client.chat.completions.create(**request_params)
+            stream = self.client.chat.completions.create(
+                model=self.model_name, messages=dialogue, stream=True, tools=functions
+            )
 
             for chunk in stream:
                 if getattr(chunk, "choices", None):

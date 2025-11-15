@@ -12,7 +12,6 @@ import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import xiaozhi.common.utils.JsonUtils;
 import xiaozhi.modules.agent.dao.AgentPluginMappingMapper;
 import xiaozhi.modules.agent.entity.AgentPluginMapping;
@@ -28,7 +27,6 @@ import xiaozhi.modules.model.service.ModelConfigService;
  */
 @Service
 @RequiredArgsConstructor
-@Slf4j
 public class AgentPluginMappingServiceImpl extends ServiceImpl<AgentPluginMappingMapper, AgentPluginMapping>
         implements AgentPluginMappingService {
     private final AgentPluginMappingMapper agentPluginMappingMapper;
@@ -87,7 +85,7 @@ public class AgentPluginMappingServiceImpl extends ServiceImpl<AgentPluginMappin
 
                 String description = "如果用户询问与【"
                         + String.join(",", knowledgeBaseList.stream().map(KnowledgeBaseEntity::getName).toList())
-                        + "】涵盖的主体范围相关内容时应调用本方法，用于查询：" + String.join(",",
+                        + "】相关的问题应调用本方法，用于查询：" + String.join(",",
                                 knowledgeBaseList.stream().map(KnowledgeBaseEntity::getDescription).toList());
                 paramInfo.put("description", description);
                 agentPluginMapping.setParamInfo(JsonUtils.toJsonString(paramInfo));

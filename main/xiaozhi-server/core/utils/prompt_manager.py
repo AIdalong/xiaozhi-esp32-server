@@ -184,7 +184,7 @@ class PromptManager:
             local_address = self._get_location_info(client_ip)
             # 获取天气信息（使用全局缓存）
             self._get_weather_info(conn, local_address)
-            self.logger.bind(tag=TAG).debug(f"上下文信息更新完成")
+            self.logger.bind(tag=TAG).info(f"上下文信息更新完成")
 
         except Exception as e:
             self.logger.bind(tag=TAG).error(f"更新上下文信息失败: {e}")

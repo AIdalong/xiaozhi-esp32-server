@@ -13,9 +13,7 @@
       <div class="function-column">
         <div class="column-header">
           <h4 class="column-title">{{ $t('functionDialog.unselectedFunctions') }}</h4>
-          <el-button type="text" @click="selectAll" class="select-all-btn">
-            {{ $t('functionDialog.selectAll') }}
-          </el-button>
+          <el-button type="text" @click="selectAll" class="select-all-btn">{{ $t('functionDialog.selectAll') }}</el-button>
         </div>
         <div class="function-list">
           <div v-if="unselected.length">
@@ -23,7 +21,7 @@
               <el-checkbox :label="func.name" v-model="selectedNames" @change="(val) => handleCheckboxChange(func, val)"
                 @click.native.stop></el-checkbox>
               <div class="func-tag" @click="handleFunctionClick(func)">
-                <div class="color-dot"></div>
+                <div class="color-dot" :style="{ backgroundColor: getFunctionColor(func.name) }"></div>
                 <span>{{ func.name }}</span>
               </div>
             </div>
@@ -38,9 +36,7 @@
       <div class="function-column">
         <div class="column-header">
           <h4 class="column-title">{{ $t('functionDialog.selectedFunctions') }}</h4>
-          <el-button type="text" @click="deselectAll" class="select-all-btn">
-            {{ $t('functionDialog.selectAll') }}
-          </el-button>
+          <el-button type="text" @click="deselectAll" class="select-all-btn">{{ $t('functionDialog.selectAll') }}</el-button>
         </div>
         <div class="function-list">
           <div v-if="selectedList.length > 0">
@@ -48,7 +44,7 @@
               <el-checkbox :label="func.name" v-model="selectedNames" @change="(val) => handleCheckboxChange(func, val)"
                 @click.native.stop></el-checkbox>
               <div class="func-tag" @click="handleFunctionClick(func)">
-                <div class="color-dot"></div>
+                <div class="color-dot" :style="{ backgroundColor: getFunctionColor(func.name) }"></div>
                 <span>{{ func.name }}</span>
               </div>
             </div>
@@ -61,9 +57,7 @@
 
       <!-- 右侧：参数配置 -->
       <div class="params-column">
-        <h4 v-if="currentFunction" class="column-title">
-          {{ $t('functionDialog.paramConfig') }} - {{ currentFunction.name }}
-        </h4>
+        <h4 v-if="currentFunction" class="column-title">{{ $t('functionDialog.paramConfig') }} - {{ currentFunction.name }}</h4>
         <div v-if="currentFunction" class="params-container">
           <el-form :model="currentFunction" class="param-form">
             <!-- 遍历 fieldsMeta，而不是 params 的 keys -->
@@ -125,8 +119,8 @@
           <el-input v-model="mcpUrl" readonly class="url-input">
             <template #suffix>
               <el-button @click="copyUrl" class="inner-copy-btn" icon="el-icon-document-copy">
-                {{ $t('functionDialog.copy') }}
-              </el-button>
+                  {{ $t('functionDialog.copy') }}
+                </el-button>
             </template>
           </el-input>
         </div>
@@ -197,6 +191,10 @@ export default {
       selectedNames: [],
       currentFunction: null,
       modifiedFunctions: {},
+      functionColorMap: [
+        '#FF6B6B', '#4ECDC4', '#45B7D1',
+        '#96CEB4', '#FFEEAD', '#D4A5A5', '#A2836E'
+      ],
       tempFunctions: {},
       // 添加一个标志位来跟踪是否已经保存
       hasSaved: false,
@@ -407,6 +405,10 @@ export default {
       // 通知父组件对话框已关闭且已保存
       this.$emit('dialog-closed', true);
     },
+    getFunctionColor(name) {
+      const hash = [...name].reduce((acc, char) => acc + char.charCodeAt(0), 0);
+      return this.functionColorMap[hash % this.functionColorMap.length];
+    },
     fieldRemark(field) {
       let description = (field && field.label) ? field.label : '';
       if (field.default) {
@@ -525,7 +527,6 @@ export default {
   flex-shrink: 0;
   width: 8px;
   height: 8px;
-  background-color: #5778ff;
   margin-right: 8px;
   border-radius: 50%;
 }

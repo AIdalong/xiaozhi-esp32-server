@@ -224,10 +224,7 @@ def check_ffmpeg_installed() -> bool:
             error_msg.append("⚠️ 发现缺少依赖库：libiconv.so.2")
             error_msg.append("解决方法：在当前 conda 环境中执行：")
             error_msg.append("   conda install -c conda-forge libiconv\n")
-        elif (
-            "no such file or directory" in stderr_output
-            and "ffmpeg" in stderr_output.lower()
-        ):
+        elif "no such file or directory" in stderr_output and "ffmpeg" in stderr_output.lower():
             error_msg.append("⚠️ 系统未找到 ffmpeg 可执行文件。")
             error_msg.append("解决方法：在当前 conda 环境中执行：")
             error_msg.append("   conda install -c conda-forge ffmpeg\n")
@@ -248,9 +245,7 @@ def extract_json_from_string(input_string):
     return None
 
 
-def audio_to_data_stream(
-    audio_file_path, is_opus=True, callback: Callable[[Any], Any] = None
-) -> None:
+def audio_to_data_stream(audio_file_path, is_opus=True, callback: Callable[[Any], Any]=None) -> None:
     # 获取文件后缀名
     file_type = os.path.splitext(audio_file_path)[1]
     if file_type:
@@ -266,7 +261,6 @@ def audio_to_data_stream(
     # 获取原始PCM数据（16位小端）
     raw_data = audio.raw_data
     pcm_to_data_stream(raw_data, is_opus, callback)
-
 
 def audio_to_data(audio_file_path: str, is_opus: bool = True) -> list[bytes]:
     """
@@ -319,10 +313,7 @@ def audio_to_data(audio_file_path: str, is_opus: bool = True) -> list[bytes]:
 
     return datas
 
-
-def audio_bytes_to_data_stream(
-    audio_bytes, file_type, is_opus, callback: Callable[[Any], Any]
-) -> None:
+def audio_bytes_to_data_stream(audio_bytes, file_type, is_opus, callback: Callable[[Any], Any]) -> None:
     """
     直接用音频二进制数据转为opus/pcm数据，支持wav、mp3、p3
     """
@@ -366,7 +357,6 @@ def pcm_to_data_stream(raw_data, is_opus=True, callback: Callable[[Any], Any] = 
             frame_data = chunk if isinstance(chunk, bytes) else bytes(chunk)
             callback(frame_data)
 
-
 def opus_datas_to_wav_bytes(opus_datas, sample_rate=16000, channels=1):
     """
     将opus帧列表解码为wav字节流
@@ -392,7 +382,6 @@ def opus_datas_to_wav_bytes(opus_datas, sample_rate=16000, channels=1):
         wf.setframerate(sample_rate)
         wf.writeframes(pcm_bytes)
     return wav_buffer.getvalue()
-
 
 def check_vad_update(before_config, new_config):
     if (
@@ -467,17 +456,6 @@ def filter_sensitive_info(config: dict) -> dict:
                 filtered[k] = _filter_dict(v)
             elif isinstance(v, list):
                 filtered[k] = [_filter_dict(i) if isinstance(i, dict) else i for i in v]
-            elif isinstance(v, str):
-                try:
-                    json_data = json.loads(v)
-                    if isinstance(json_data, dict):
-                        filtered[k] = json.dumps(
-                            _filter_dict(json_data), ensure_ascii=False
-                        )
-                    else:
-                        filtered[k] = v
-                except (json.JSONDecodeError, TypeError):
-                    filtered[k] = v
             else:
                 filtered[k] = v
         return filtered

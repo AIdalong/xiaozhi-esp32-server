@@ -174,7 +174,7 @@ class ASRProvider(ASRProviderBase):
 
         self.task_id = uuid.uuid4().hex
 
-        logger.bind(tag=TAG).debug(f"WebSocket连接建立成功, task_id: {self.task_id}")
+        logger.bind(tag=TAG).info(f"WebSocket连接建立成功, task_id: {self.task_id}")
 
         self.is_processing = True
         self.server_ready = False  # 重置服务器准备状态
@@ -202,7 +202,7 @@ class ASRProvider(ASRProviderBase):
             }
         }
         await self.asr_ws.send(json.dumps(start_request, ensure_ascii=False))
-        logger.bind(tag=TAG).debug("已发送开始请求，等待服务器准备...")
+        logger.bind(tag=TAG).info("已发送开始请求，等待服务器准备...")
 
     async def _forward_results(self, conn):
         """转发识别结果"""
@@ -231,7 +231,7 @@ class ASRProvider(ASRProviderBase):
                     # 收到TranscriptionStarted表示服务器准备好接收音频数据
                     if message_name == "TranscriptionStarted":
                         self.server_ready = True
-                        logger.bind(tag=TAG).debug("服务器已准备，开始发送缓存音频...")
+                        logger.bind(tag=TAG).info("服务器已准备，开始发送缓存音频...")
                         
                         # 发送缓存音频
                         if conn.asr_audio:
@@ -281,7 +281,7 @@ class ASRProvider(ASRProviderBase):
 
     async def _cleanup(self, conn):
         """清理资源"""
-        logger.bind(tag=TAG).debug(f"开始ASR会话清理 | 当前状态: processing={self.is_processing}, server_ready={self.server_ready}")
+        logger.bind(tag=TAG).info(f"开始ASR会话清理 | 当前状态: processing={self.is_processing}, server_ready={self.server_ready}")
         
         # 清理连接的音频缓存
         if conn and hasattr(conn, 'asr_audio_for_voiceprint'):
@@ -304,17 +304,17 @@ class ASRProvider(ASRProviderBase):
                         "appkey": self.appkey
                     }
                 }
-                logger.bind(tag=TAG).debug("正在发送ASR终止请求")
+                logger.bind(tag=TAG).info("正在发送ASR终止请求")
                 await self.asr_ws.send(json.dumps(stop_msg, ensure_ascii=False))
                 await asyncio.sleep(0.1)
-                logger.bind(tag=TAG).debug("ASR终止请求已发送")
+                logger.bind(tag=TAG).info("ASR终止请求已发送")
             except Exception as e:
                 logger.bind(tag=TAG).error(f"ASR终止请求发送失败: {e}")
         
         # 状态重置（在终止请求发送后）
         self.is_processing = False
         self.server_ready = False
-        logger.bind(tag=TAG).debug("ASR状态已重置")
+        logger.bind(tag=TAG).info("ASR状态已重置")
 
         # 清理任务
         if self.forward_task and not self.forward_task.done():
@@ -337,7 +337,7 @@ class ASRProvider(ASRProviderBase):
             finally:
                 self.asr_ws = None
         
-        logger.bind(tag=TAG).debug("ASR会话清理完成")
+        logger.bind(tag=TAG).info("ASR会话清理完成")
 
     async def speech_to_text(self, opus_data, session_id, audio_format):
         """获取识别结果"""

@@ -84,12 +84,11 @@ def search_from_ragflow(conn, question=None):
                 else:
                     contents.append(str(content))
 
-        if contents:
-            # 组织知识库内容为引用模式
-            context_text = f"# 关于问题【{question}】查到知识库如下\n"
-            context_text += "```\n\n\n".join(contents[:5])
-            context_text += "\n```"
-        else:
+        # 构建适合大模型的上下文内容（每段前加编号，段间两个换行）
+        context_text = "\n\n".join(
+            f"{i+1}. {c.strip()}" for i, c in enumerate(contents[:5])
+        )
+        if not context_text:
             context_text = "根据知识库查询结果，没有相关信息。"
         return ActionResponse(Action.REQLLM, context_text, None)
 

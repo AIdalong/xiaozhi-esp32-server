@@ -445,8 +445,8 @@
 
         let audioBufferQueue = [];     // 存储接收到的音频包
         let isAudioPlaying = false;    // 是否正在播放音频
-        const BUFFER_THRESHOLD = 6;    // 缓冲包数量阈值，6个包（360ms）平衡延迟和流畅度
-        const MIN_AUDIO_DURATION = 0.12; // 最小音频长度(秒)，对应2个Opus包(120ms)
+        const BUFFER_THRESHOLD = 3;    // 缓冲包数量阈值，至少累积3个包再开始播放
+        const MIN_AUDIO_DURATION = 0.1; // 最小音频长度(秒)，小于这个长度的音频会被合并
         let streamingContext = null;   // 音频流上下文
         const SAMPLE_RATE = 16000;     // 采样率
         const CHANNELS = 1;            // 声道数
@@ -518,12 +518,12 @@
                 log(`预初始化Opus解码器失败: ${error.message}`, 'warning');
                 // 继续缓冲，我们会在播放时再次尝试初始化
             });
-            const timeout = 400;
+            const timeout = 300;
             while (true) {
-                // 初始缓冲：等待6个包，平衡延迟和流畅度
+                // 每次数据空的时候等三条数据
                 const packets = await queue.dequeue(
-                    6,                       // 至少 6 条，360ms缓冲
-                    timeout,                 // 最多等 400 ms
+                    3,                       // 至少 3 条
+                    timeout,                     // 最多等 300 ms
                     (count) => {             // 超时额外回调
                         log(`缓冲超时，当前缓冲包数: ${count}，开始播放`, 'info');
                     }
@@ -532,9 +532,9 @@
                     log(`已缓冲 ${packets.length} 个音频包，开始播放`, 'info');
                     streamingContext.pushAudioBuffer(packets)
                 }
-                // 持续缓冲：快速获取数据，每30ms检查一次
+                // 50毫秒里，有多少给多少
                 while (true) {
-                    const data = await queue.dequeue(99, 30)
+                    const data = await queue.dequeue(99, 50)
                     if (data.length) {
                         streamingContext.pushAudioBuffer(data)
                     } else {
@@ -1430,13 +1430,6 @@
                     };
 
                     log('使用AudioWorklet处理音频', 'success');
-
-                    // 需要连接输出，否则不会触发处理
-                    // 我们创建一个静音通道
-                    const silent = audioContext.createGain();
-                    silent.gain.value = 0;
-                    audioProcessor.connect(silent);
-                    silent.connect(audioContext.destination);
                     return { node: audioProcessor, type: 'worklet' };
                 } else {
                     // 使用旧版ScriptProcessorNode作为回退方案
@@ -1610,11 +1603,6 @@
 
                 // 创建音频上下文和分析器
                 audioContext = getAudioContextInstance();
-
-                // 浏览器出于安全和性能考虑，新创建的 AudioContext 默认处于 suspended 状态，必须显式调用 resume() 才会开始处理音频。
-                if (audioContext.state === 'suspended') {
-                    await audioContext.resume();
-                }
 
                 // 创建音频处理器
                 const processorResult = await createAudioProcessor();

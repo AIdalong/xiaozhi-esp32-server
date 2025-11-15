@@ -75,6 +75,13 @@ public interface KnowledgeFilesService {
         Map<String, Object> getRAGConfig(String ragModelId);
 
         /**
+         * 获取默认RAG配置信息
+         * 
+         * @return 默认RAG配置信息
+         */
+        Map<String, Object> getDefaultRAGConfig();
+
+        /**
          * 解析文档（切块）
          * 
          * @param datasetId   知识库ID

@@ -5,6 +5,7 @@ import java.util.List;
 
 import xiaozhi.common.page.PageData;
 import xiaozhi.common.service.BaseService;
+import xiaozhi.modules.agent.dto.AgentCreateByDeviceDTO;
 import xiaozhi.modules.device.dto.DevicePageUserDTO;
 import xiaozhi.modules.device.dto.DeviceReportReqDTO;
 import xiaozhi.modules.device.dto.DeviceReportRespDTO;
@@ -89,10 +90,16 @@ public interface DeviceService extends BaseService<DeviceEntity> {
     Date getLatestLastConnectionTime(String agentId);
 
     /**
+     * 测试手动添加设备
+     */
+    void testAddDevice(Long userId, AgentCreateByDeviceDTO dto);
+
+    /**
      * 手动添加设备
      */
     void manualAddDevice(Long userId, DeviceManualAddDTO dto);
 
+    Boolean isDuplicateDevice(String mac);
     /**
      * 更新设备连接信息
      */

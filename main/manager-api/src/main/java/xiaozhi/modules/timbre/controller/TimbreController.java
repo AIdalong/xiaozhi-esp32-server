@@ -45,6 +45,7 @@ public class TimbreController {
     @Parameters({
             @Parameter(name = "ttsModelId", description = "对应 TTS 模型主键", required = true),
             @Parameter(name = "name", description = "音色名称"),
+            @Parameter(name = "language", description = "支持的语言"),
             @Parameter(name = Constant.PAGE, description = "当前页码，从1开始", required = true),
             @Parameter(name = Constant.LIMIT, description = "每页显示记录数", required = true),
     })
@@ -53,6 +54,7 @@ public class TimbreController {
         TimbrePageDTO dto = new TimbrePageDTO();
         dto.setTtsModelId((String) params.get("ttsModelId"));
         dto.setName((String) params.get("name"));
+        dto.setLanguage((String)params.get("language"));
         dto.setLimit((String) params.get(Constant.LIMIT));
         dto.setPage((String) params.get(Constant.PAGE));
 
