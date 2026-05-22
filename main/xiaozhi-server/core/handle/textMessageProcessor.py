@@ -1,4 +1,5 @@
 import json
+import time
 
 from core.handle.textMessageHandlerRegistry import TextMessageHandlerRegistry
 
@@ -13,6 +14,9 @@ class TextMessageProcessor:
 
     async def process_message(self, conn, message: str) -> None:
         """处理消息的主入口"""
+        # 更新活动时间，防止超时断开
+        conn.last_activity_time = time.time() * 1000
+
         try:
             # 解析JSON消息
             msg_json = json.loads(message)

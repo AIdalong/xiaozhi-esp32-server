@@ -18,6 +18,10 @@ class ListenTextMessageHandler(TextMessageHandler):
         return TextMessageType.LISTEN
 
     async def handle(self, conn, msg_json: Dict[str, Any]) -> None:
+        # perception 模式下不处理 listen 消息
+        if hasattr(conn, 'stream_role') and conn.stream_role == 'perception':
+            return
+
         if "mode" in msg_json:
             conn.client_listen_mode = msg_json["mode"]
             conn.logger.bind(tag=TAG).debug(

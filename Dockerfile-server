@@ -1,6 +1,10 @@
 # 生产镜像，仅包含应用代码
-FROM ghcr.io/xinnan-tech/xiaozhi-esp32-server:server-base
+FROM xiaozhi-esp32-server:server_latest
 
+RUN pip install --no-cache-dir redis==5.0.1 -i https://mirrors.aliyun.com/pypi/simple/ --trusted-host mirrors.aliyun.com
+
+# 注入构建时间，确保COPY层不使用缓存
+ARG BUILD_DATE
 COPY main/xiaozhi-server .
 
 # 启动应用

@@ -58,6 +58,13 @@ async def handleHelloMessage(conn, msg_json):
             # 发送mcp消息，获取tools列表
             asyncio.create_task(send_mcp_tools_list_request(conn))
 
+    # 解析 stream_role
+    stream_role = msg_json.get("stream_role", "dialog")
+    conn.stream_role = stream_role
+    # 更新活动时间，防止超时断开
+    conn.last_activity_time = time.time() * 1000
+    conn.logger.bind(tag=TAG).info(f"流模式: {stream_role}")
+
     await conn.websocket.send(json.dumps(conn.welcome_msg))
 
 

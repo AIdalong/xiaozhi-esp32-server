@@ -9,6 +9,10 @@ TAG = __name__
 
 
 async def sendAudioMessage(conn, sentenceType, audios, text):
+    # perception 模式下不发送消息
+    if hasattr(conn, 'stream_role') and conn.stream_role == 'perception':
+        return
+
     if conn.tts.tts_audio_first_sentence:
         conn.logger.bind(tag=TAG).info(f"发送第一段语音: {text}")
         conn.tts.tts_audio_first_sentence = False
@@ -206,6 +210,10 @@ async def sendAudio(conn, audios, frame_duration=60):
 
 async def send_tts_message(conn, state, text=None):
     """发送 TTS 状态消息"""
+    # perception 模式下不发送消息
+    if hasattr(conn, 'stream_role') and conn.stream_role == 'perception':
+        return
+
     if text is None and state == "sentence_start":
         return
     message = {"type": "tts", "state": state, "session_id": conn.session_id}
@@ -231,6 +239,10 @@ async def send_tts_message(conn, state, text=None):
 
 async def send_stt_message(conn, text):
     """发送 STT 状态消息"""
+    # perception 模式下不发送消息
+    if hasattr(conn, 'stream_role') and conn.stream_role == 'perception':
+        return
+
     end_prompt_str = conn.config.get("end_prompt", {}).get("prompt")
     if end_prompt_str and end_prompt_str == text:
         await send_tts_message(conn, "start")

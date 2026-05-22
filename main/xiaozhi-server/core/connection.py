@@ -157,6 +157,11 @@ class ConnectionHandler:
         # 标记连接是否来自MQTT
         self.conn_from_mqtt_gateway = False
 
+        # 感知模式相关
+        self.stream_role: str = "dialog"  # "dialog" 或 "perception"
+        self.perception_audio_buffer: list = []  # 暂存perception音频片段
+        self.perception_packet_count: int = 0
+
         # 初始化提示词管理器
         self.prompt_manager = PromptManager(config, self.logger)
 
@@ -270,11 +275,29 @@ class ConnectionHandler:
 
             # 处理来自MQTT网关的音频包
             if self.conn_from_mqtt_gateway and len(message) >= 16:
-                handled = await self._process_mqtt_audio_message(message)
-                if handled:
-                    return
+                # perception模式下直接提取音频数据处理
+                if hasattr(self, 'stream_role') and self.stream_role == 'perception':
+                    try:
+                        audio_length = int.from_bytes(message[12:16], "big")
+                        if audio_length > 0 and len(message) >= 16 + audio_length:
+                            audio_data = message[16 : 16 + audio_length]
+                        elif len(message) > 16:
+                            audio_data = message[16:]
+                        else:
+                            audio_data = message
+                        from core.handle import perceptionAudioHandle
+                        await perceptionAudioHandle.handle_perception_audio(self, audio_data)
+                    except Exception as e:
+                        self.logger.bind(tag=TAG).error(f"解析MQTT感知音频包失败: {e}")
+                    return  # perception模式处理完直接返回，跟最新commit保持一致逻辑
+                else:
+                    # dialog模式下使用原有的时间戳排序处理
+                    handled = await self._process_mqtt_audio_message(message)
+                    if handled:
+                        return
 
             # 不需要头部处理或没有头部时，直接处理原始消息
+            # （perception模式已经return不会走到这里；handled=False时也会走到这里）
             self.asr_audio_queue.put(message)
 
     async def _process_mqtt_audio_message(self, message):
@@ -305,13 +328,15 @@ class ConnectionHandler:
                 self.asr_audio_queue.put(audio_data)
                 return True
         except Exception as e:
-            self.logger.bind(tag=TAG).error(f"解析WebSocket音频包失败: {e}")
+            self.logger.bind(tag=TAG).error(f"解析WebSocket音频包失败: {e}, 消息长度: {len(message)}")
 
         # 处理失败，返回False表示需要继续处理
         return False
 
     def _process_websocket_audio(self, audio_data, timestamp):
         """处理WebSocket格式的音频包"""
+        # 调试日志：确认进入音频处理
+        self.logger.bind(tag=TAG).debug(f"_process_websocket_audio: audio_len={len(audio_data)}, timestamp={timestamp}")
         # 初始化时间戳序列管理
         if not hasattr(self, "audio_timestamp_buffer"):
             self.audio_timestamp_buffer = {}
@@ -1119,6 +1144,11 @@ class ConnectionHandler:
         """检查连接超时"""
         try:
             while not self.stop_event.is_set():
+                # perception 模式下不做超时检查
+                if hasattr(self, 'stream_role') and self.stream_role == 'perception':
+                    await asyncio.sleep(10)
+                    continue
+
                 # 检查是否超时（只有在时间戳已初始化的情况下）
                 if self.last_activity_time > 0.0:
                     current_time = time.time() * 1000

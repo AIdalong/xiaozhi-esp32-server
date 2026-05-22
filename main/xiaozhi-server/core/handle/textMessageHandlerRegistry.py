@@ -5,6 +5,7 @@ from core.handle.textHandler.helloMessageHandler import HelloTextMessageHandler
 from core.handle.textHandler.iotMessageHandler import IotTextMessageHandler
 from core.handle.textHandler.listenMessageHandler import ListenTextMessageHandler
 from core.handle.textHandler.mcpMessageHandler import McpTextMessageHandler
+from core.handle.textHandler.perceptionMessageHandler import PerceptionMessageHandler
 from core.handle.textMessageHandler import TextMessageHandler
 from core.handle.textHandler.serverMessageHandler import ServerTextMessageHandler
 
@@ -27,6 +28,7 @@ class TextMessageHandlerRegistry:
             IotTextMessageHandler(),
             McpTextMessageHandler(),
             ServerTextMessageHandler(),
+            PerceptionMessageHandler(),
         ]
 
         for handler in handlers:

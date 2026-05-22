@@ -74,6 +74,10 @@ class ASRProviderBase(ABC):
     # 处理语音停止
     async def handle_voice_stop(self, conn, asr_audio_task: List[bytes]):
         """并行处理ASR和声纹识别"""
+        # perception 模式下不处理
+        if hasattr(conn, 'stream_role') and conn.stream_role == 'perception':
+            return
+
         try:
             total_start_time = time.monotonic()
             

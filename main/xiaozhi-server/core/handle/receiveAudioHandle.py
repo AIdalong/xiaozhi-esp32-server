@@ -11,6 +11,13 @@ TAG = __name__
 
 
 async def handleAudioMessage(conn, audio):
+    # 按 stream_role 分流
+    if hasattr(conn, 'stream_role') and conn.stream_role == 'perception':
+        # perception 模式：走感知处理分支
+        from core.handle import perceptionAudioHandle
+        await perceptionAudioHandle.handle_perception_audio(conn, audio)
+        return
+
     # 当前片段是否有人说话
     have_voice = conn.vad.is_vad(conn, audio)
     # 如果设备刚刚被唤醒，短暂忽略VAD检测
@@ -91,6 +98,10 @@ async def startToChat(conn, text):
 
 
 async def no_voice_close_connect(conn, have_voice):
+    # perception 模式下不做超时关闭检查
+    if hasattr(conn, 'stream_role') and conn.stream_role == 'perception':
+        return
+
     if have_voice:
         conn.last_activity_time = time.time() * 1000
         return

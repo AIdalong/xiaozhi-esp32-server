@@ -1,10 +1,9 @@
 # Docker安装Server - 本地构建版本
-# 所有镜像都从本地源码构建
 
 version: '3'
 services:
   xiaozhi-esp32-server:
-    image: xiaozhi-esp32-server:server_latest
+    image: xiaozhi-esp32-server:perception
     container_name: xiaozhi-esp32-server
     depends_on:
       - xiaozhi-esp32-server-db
@@ -21,21 +20,26 @@ services:
       - seccomp:unconfined
     environment:
       - TZ=Asia/Shanghai
-      - LANG=zh_CN.UTF-8
-      - LC_ALL=zh_CN.UTF-8
-      - PYTHONIOENCODING=utf-8
     volumes:
       # 配置文件目录
       - ./data:/opt/xiaozhi-esp32-server/data
-      # 模型文件挂载
-      - /srv/xiaozhi_server/models/SenseVoiceSmall:/opt/xiaozhi-esp32-server/models/SenseVoiceSmall
-      - /srv/xiaozhi_server/models/snakers4_silero-vad:/opt/xiaozhi-esp32-server/models/snakers4_silero-vad
       # perception 音频保存目录
       - /tmp/perception_audio:/tmp/perception_audio
+      # perception 模式代码挂载
+      - ./core/connection.py:/opt/xiaozhi-esp32-server/core/connection.py
+      - ./core/handle/helloHandle.py:/opt/xiaozhi-esp32-server/core/handle/helloHandle.py
+      - ./core/handle/receiveAudioHandle.py:/opt/xiaozhi-esp32-server/core/handle/receiveAudioHandle.py
+      - ./core/handle/perceptionAudioHandle.py:/opt/xiaozhi-esp32-server/core/handle/perceptionAudioHandle.py
+      - ./core/handle/textHandler/listenMessageHandler.py:/opt/xiaozhi-esp32-server/core/handle/textHandler/listenMessageHandler.py
+      - ./core/handle/sendAudioHandle.py:/opt/xiaozhi-esp32-server/core/handle/sendAudioHandle.py
+      - ./core/handle/textHandler/perceptionMessageHandler.py:/opt/xiaozhi-esp32-server/core/handle/textHandler/perceptionMessageHandler.py
+      - ./core/providers/asr/base.py:/opt/xiaozhi-esp32-server/core/providers/asr/base.py
+      - ./core/handle/textMessageHandlerRegistry.py:/opt/xiaozhi-esp32-server/core/handle/textMessageHandlerRegistry.py
+      - ./core/handle/textMessageType.py:/opt/xiaozhi-esp32-server/core/handle/textMessageType.py
 
   # manager-api和manager-web模块
   xiaozhi-esp32-server-web:
-    image: xiaozhi-esp32-server:web_latest
+    image: ghcr.nju.edu.cn/xinnan-tech/xiaozhi-esp32-server:web_latest
     container_name: xiaozhi-esp32-server-web
     restart: always
     networks:
@@ -50,9 +54,6 @@ services:
       - "8002:8002"
     environment:
       - TZ=Asia/Shanghai
-      - LANG=zh_CN.UTF-8
-      - LC_ALL=zh_CN.UTF-8
-      - PYTHONIOENCODING=utf-8
       - SPRING_DATASOURCE_DRUID_URL=jdbc:mysql://xiaozhi-esp32-server-db:3306/xiaozhi_esp32_server?useUnicode=true&characterEncoding=UTF-8&serverTimezone=Asia/Shanghai&nullCatalogMeansCurrent=true&connectTimeout=30000&socketTimeout=30000&autoReconnect=true&failOverReadOnly=false&maxReconnects=10
       - SPRING_DATASOURCE_DRUID_USERNAME=root
       - SPRING_DATASOURCE_DRUID_PASSWORD=123456
@@ -80,9 +81,6 @@ services:
       - ./mysql/data:/var/lib/mysql
     environment:
       - TZ=Asia/Shanghai
-      - LANG=zh_CN.UTF-8
-      - LC_ALL=zh_CN.UTF-8
-      - PYTHONIOENCODING=utf-8
       - MYSQL_ROOT_PASSWORD=123456
       - MYSQL_DATABASE=xiaozhi_esp32_server
       - MYSQL_INITDB_ARGS="--character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci"
